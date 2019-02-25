@@ -9,14 +9,22 @@ class TestTraversal(TestCase):
         assert list(result) == [], "Empty graph returns empty list."
 
     def test_single_graph(self):
+        nodes = [Node(colour = Colour.GREEN, id = 1),
+                 Node(colour = Colour.BLACK, id = 2),
+                 Node(colour = Colour.BLUE, id = 3)]
         simple_graph = {
-            Node(colour = Colour.GREEN, id = 1): [Node(colour = Colour.BLACK, id = 2)],
-            Node(colour = Colour.BLACK, id = 2): [Node(colour = Colour.BLUE, id = 3)],
-            Node(colour = Colour.BLUE, id = 3): []
+            nodes[0]: [nodes[1]],
+            nodes[1]: [nodes[2]],
+            nodes[2]: []
         }
         result = traverse_graph(graph = simple_graph,
                                 target_colours = [Colour.BLUE])
-        print(list(result))
+        for key in result:
+            for k, v in key.items():
+                node_entry = simple_graph.get(list(filter(lambda x: x.id == k.id, nodes))[0])
+
+                # Check to make sure the ID's of every child node are the same.
+                assert list(map(lambda n: n.id, node_entry)) == list(map(lambda n: n.id, v))
 
     def small_node_list(self):
         return [Node(colour = Colour.BLUE, id = 1),

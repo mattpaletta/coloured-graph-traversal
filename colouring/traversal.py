@@ -70,11 +70,11 @@ def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) 
                                          remaining_targets = remaining_children,
                                          curr_adj = new_adj)
 
-    starting_nodes = get_all_starting_nodes(targets = target_colours,
-                                            node_colours = node_colour_lookup)
+    starting_nodes = list(get_all_starting_nodes(targets = target_colours,
+                                            node_colours = node_colour_lookup))
 
     green_nodes = node_colour_lookup.get(Colour.GREEN, [])
-    if len(green_nodes) >= 1:
+    if len(green_nodes) > 0:
         for green in green_nodes:
             for target_nodes in starting_nodes:
                 yield from find_children(starting_node = green,
