@@ -40,17 +40,18 @@ def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) 
         for child in children_of_root:
             child_name = child.id
             if child_name in has_visited:
-                print("Skipping visited child: {0}".format(child_name))
+                logging.debug("Skipping visited child: {0}".format(child_name))
                 continue
             if child_name == starting_node.id:
-                print("Skipping duplicate node: {0}".format(child_name))
+                logging.debug("Skipping duplicate node: {0}".format(child_name))
                 continue
 
             if child in remaining_targets:  # We found one of our target nodes!
-                print("Found a child node: {0}".format(child_name))
+                logging.debug("Found a child node: {0}".format(child_name))
+                # TODO: Bug here is two found nodes have the same parent, (not in serial), this algorithm fails.
 
                 # Remove child from target nodes, and recurse
-                remaining_children = [x for x in remaining_targets if x != child]
+                remaining_children = [x for x in remaining_targets if x.id != child.id]
             else:
                 # We didn't hit a child, so no changes.
                 remaining_children = remaining_targets
@@ -70,13 +71,13 @@ def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) 
                                          remaining_targets = remaining_children,
                                          curr_adj = new_adj)
 
-    starting_nodes = list(get_all_starting_nodes(targets = target_colours,
-                                            node_colours = node_colour_lookup))
-
+    starting_nodes = get_all_starting_nodes(targets = target_colours,
+                                            node_colours = node_colour_lookup)
     green_nodes = node_colour_lookup.get(Colour.GREEN, [])
+
     if len(green_nodes) > 0:
-        for green in green_nodes:
-            for target_nodes in starting_nodes:
+        for target_nodes in starting_nodes:
+            for green in green_nodes:
                 yield from find_children(starting_node = green,
                                          has_visited = [green],  # Make sure we don't go in circles
                                          remaining_targets = target_nodes,

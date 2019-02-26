@@ -39,7 +39,6 @@ class TestUtils(TestCase):
             node_ids.append(list(map(lambda n: n.id, sequence)))
         assert node_ids == [[3, 2]], "Starting (multiple) nodes not adding the correct nodes to sequence."
 
-
     def small_node_list(self):
         return [Node(colour = Colour.BLUE, id = 1),
                 
