@@ -1,5 +1,5 @@
 from unittest import TestCase
-from colouring.traversal import traverse_graph, Node, Colour, get_all_starting_nodes, build_node_lookup
+from colouring.traversal import traverse_graph, Node, Colour
 from typing import List, Dict
 
 # Helper function, takes a list of nodes, and a graph of their indices, returns the nodes at those indices
@@ -19,19 +19,6 @@ def index_to_nodes(nodes: List[Node], graph: Dict[int, List[int]]) -> Dict[Node,
     out: Dict[Node, List[Node]] = {}
     for k, v in graph.items():
         out[nodes[k]] = [nodes[i] for i in v]
-    return out
-
-# This method does the reverse of index_to_nodes
-# Takes a graph of nodes, and reverts back to indexes for easier printing/debugging
-def nodes_to_index(nodes: List[Node], graph: Dict[Node, List[Node]]) -> Dict[int, List[int]]:
-    out: Dict[int, List[int]] = {}
-    def get_node_index(node: Node):
-        for i in range(len(nodes)):
-            if node.id == nodes[i].id:
-                return i
-
-    for k, v in graph.items():
-        out[get_node_index(k)] = [get_node_index(i) for i in v]
     return out
 
 class TestTraversal(TestCase):
@@ -144,9 +131,9 @@ class TestTraversal(TestCase):
         }
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.BLUE, Colour.RED]))
-        for graph in result:
-            print("Printing solution")
-            print(nodes_to_index(nodes, graph))
+        # for graph in result:
+        #    print("Printing solution")
+        #    print(nodes_to_index(nodes, graph))
         assert len(result) == 4, "there are no graphs that satisfy this graph"
 
     def test_splitting_end_points(self):
@@ -161,7 +148,7 @@ class TestTraversal(TestCase):
             0 : [1, 4, 5],
             1 : [2],
             2 : [3],
-            3 : [3, 0],
+            3 : [3, 0, 4],
             4 : [],
             5 : [],
             6 : [4],
@@ -169,16 +156,4 @@ class TestTraversal(TestCase):
 
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.BLUE, Colour.RED]))
-        for graph in result:
-            print("Printing result")
-            print(nodes_to_index(nodes, graph))
-        assert len(result) == 3, "Should have found all three target graphs"
-
-
-    def small_node_list(self):
-        return [Node(colour = Colour.BLUE, id = 1),
-
-                # Make sure we only have 1 red node.
-                Node(colour = Colour.RED, id = 2),
-                Node(colour = Colour.YELLOW, id = 3),
-                Node(colour = Colour.BLUE, id = 4)]
+        assert len(result) == 2, "Should have found all three target graphs"
