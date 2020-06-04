@@ -136,6 +136,40 @@ class TestTraversal(TestCase):
         #    print(nodes_to_index(nodes, graph))
         assert len(result) == 4, "there are no graphs that satisfy this graph"
 
+    def test_multiple_valid_graph_parallel_parents(self):
+        nodes = [Node(colour = Colour.GREEN, id = 1), #0
+                 Node(colour = Colour.BLACK, id = 2), #1
+                 Node(colour = Colour.BLACK, id = 3), #2
+                 Node(colour = Colour.BLUE, id = 4),  #3
+                 Node(colour = Colour.RED, id = 5)]   #4
+        simple_graph = {
+            0: [1, 2],
+            1: [2, 3],
+            2: [4],
+            3: [],
+            4: [],
+        }
+
+        """
+        Possible Graphs:
+            0 -> 1
+            1 -> 3
+            1 -> 2
+            2 -> 4
+        --OR--
+            0 -> 2
+            0 -> 1
+            2 -> 4
+            1 -> 3
+        """
+        # visualize_graph(simple_graph)
+        node_graph = index_to_nodes(nodes, simple_graph)
+        result = traverse_graph(
+            graph = node_graph,
+            target_colours = [Colour.BLUE, Colour.RED])
+        final = list(result)
+        assert len(final) == 2, "Should contain two possible graphs."
+
     def test_splitting_end_points(self):
         nodes = [Node(colour = Colour.GREEN, id = 1),
                  Node(colour = Colour.BLACK, id = 2),
