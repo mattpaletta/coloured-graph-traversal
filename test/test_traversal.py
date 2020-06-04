@@ -21,19 +21,6 @@ def index_to_nodes(nodes: List[Node], graph: Dict[int, List[int]]) -> Dict[Node,
         out[nodes[k]] = [nodes[i] for i in v]
     return out
 
-# This method does the reverse of index_to_nodes
-# Takes a graph of nodes, and reverts back to indexes for easier printing/debugging
-def nodes_to_index(nodes: List[Node], graph: Dict[Node, List[Node]]) -> Dict[int, List[int]]:
-    out: Dict[int, List[int]] = {}
-    def get_node_index(node: Node):
-        for i in range(len(nodes)):
-            if node.id == nodes[i].id:
-                return i
-
-    for k, v in graph.items():
-        out[get_node_index(k)] = [get_node_index(i) for i in v]
-    return out
-
 class TestTraversal(TestCase):
     def test_empty_graph(self):
         result = traverse_graph(graph = {},
@@ -170,12 +157,3 @@ class TestTraversal(TestCase):
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.BLUE, Colour.RED]))
         assert len(result) == 2, "Should have found all three target graphs"
-
-
-    def small_node_list(self):
-        return [Node(colour = Colour.BLUE, id = 1),
-
-                # Make sure we only have 1 red node.
-                Node(colour = Colour.RED, id = 2),
-                Node(colour = Colour.YELLOW, id = 3),
-                Node(colour = Colour.BLUE, id = 4)]

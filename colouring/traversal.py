@@ -12,10 +12,8 @@ def combine_adj_matrix(starting_node: int, graph1: Matrix, graph2: Matrix) -> Ma
     out = Matrix(graph1.size())
 
     def traverse(curr_node, visited: Set[int]):
-        if curr_node in visited:
-            # We've already visited this node, do nothing
-            pass
-        else:
+        # Do nothing if we already visited the node
+        if curr_node not in visited:
             # Get all outgoing edges
             all_outgoing = set(graph1.get_connected_lst(curr_node) + graph2.get_connected_lst(curr_node))
             visited.add(curr_node)
@@ -37,12 +35,12 @@ def find_children(graph: Matrix,
     children_of_root = graph.get_connected_lst(starting_node)
 
     for child in children_of_root:
-        if child in has_visited:
-            logging.debug("Skipping visited child: {0}".format(child))
-            continue
-
         if child == starting_node:
             logging.debug("Skipping duplicate node: {0}".format(child))
+            continue
+
+        if child in has_visited:
+            logging.debug("Skipping visited child: {0}".format(child))
             continue
 
         if child in remaining_targets:  # We found one of our target nodes!
