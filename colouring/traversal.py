@@ -1,212 +1,147 @@
 import logging
 from copy import deepcopy
-from enum import Enum
 from typing import List, Dict, Iterator, Set
 import itertools
 
-class Colour(Enum):
-    BLACK = 1
-    RED = 2
-    GREEN = 3
-    BLUE = 4
-    YELLOW = 5
+from colouring.colour import Colour
+from colouring.matrix import Matrix
+from colouring.node import Node
+from colouring import utils
 
-
-class Node(object):
-    def __init__(self, colour: Colour, id: int):
-        self._colour = colour
-        self.id = id
-
-    def is_colour(self, colour: Colour) -> bool:
-        return self.get_colour().value == colour.value
-
-    def get_colour(self) -> Colour:
-        return self._colour
-
-def nodes_to_index(nodes, graph):
-    out = {}
-    def get_node_index(node):
-        for i in range(len(nodes)):
-            if node.id == nodes[i].id:
-                return i
-    for k, v in graph.items():
-        out[get_node_index(k)] = [get_node_index(i) for i in v]
-    return out
-
-def is_adj_same(graph1: Dict[Node, List[Node]], graph2: Dict[Node, List[Node]]):
-    # If their keys differ, they can't be the same
-    if set(graph1.keys()) != set(graph2.keys()):
-        return False
-    else:
-        for k in graph1.keys():
-            # Make sure every key is the same
-            if graph1.get(k) != graph2.get(k):
-                return False
-        return True
-
-def combine_adj_list(starting_node: Node, graph1: Dict[Node, List[Node]], graph2: Dict[Node, List[Node]]) -> Dict[Node, List[Node]]:
-    # Warning: There may be dangling nodes afterwards
-    out = {}
-
-    def node_by_id(node_id):
-        result = [n for n in list(graph1.keys()) + list(graph2.keys()) if node_id == n.id]
-        if len(result) > 0:
-            return result[0]
-        else:
-            return None
+def combine_adj_matrix(starting_node: int, graph1: Matrix, graph2: Matrix) -> Matrix:
+    out = Matrix(graph1.size())
 
     def traverse(curr_node, visited: Set[int]):
-        curr_node_id = curr_node.id
-        if curr_node_id in visited:
+        if curr_node in visited:
             # We've already visited this node, do nothing
-            print("Already visited")
             pass
         else:
             # Get all outgoing edges
-            all_outgoing = graph1.get(node_by_id(curr_node.id), []) + graph2.get(node_by_id(curr_node), [])
-            visited.add(curr_node_id)
-            print(all_outgoing)
-            out[node_by_id(curr_node.id)] = all_outgoing
+            all_outgoing = set(graph1.get_connected_lst(curr_node) + graph2.get_connected_lst(curr_node))
+            visited.add(curr_node)
             for outgoing in all_outgoing:
-                print("Traversing: ", curr_node_id, " to ", outgoing.id)
-                traverse(outgoing, visited)
-    traverse(node_by_id(starting_node.id), set())
-    print(nodes_to_index(list(graph1.keys()) + list(graph2.keys()), out))
-    return out
-    """
-    for k in graph1.keys():
-        if k.id not in [n.id for n in out.keys()]:
-            out[k] = list(set(graph1.get(k, []) + graph2.get(k, [])))
-
-    for k in graph2.keys():
-        # We can skip over items already in out (must have been in graph1)
-        if k.id not in [n.id for n in out.keys()]:
-            out[k] = list(set(graph1.get(k, []) + graph2.get(k, [])))
-    """
+                if outgoing not in visited:
+                    out.add_edge(curr_node, outgoing)
+                    traverse(outgoing, visited)
+    traverse(starting_node, set())
     return out
 
-def has_output_adj(list_of_output, graph):
-    for adj in list_of_output:
-        if is_adj_same(adj, graph):
-            return True
-    return False
+
+# This gets all the paths from one starting node to one or more end nodes
+def find_children(graph: Matrix,
+                  starting_node: int,
+                  has_visited: List[int],
+                  remaining_targets: List[int],
+                  curr_matrix: Matrix) -> Iterator[Matrix]:
+    # Get all children of root.
+    children_of_root = graph.get_connected_lst(starting_node)
+
+    for child in children_of_root:
+        if child in has_visited:
+            logging.debug("Skipping visited child: {0}".format(child))
+            continue
+
+        if child == starting_node:
+            logging.debug("Skipping duplicate node: {0}".format(child))
+            continue
+
+        if child in remaining_targets:  # We found one of our target nodes!
+            logging.debug("Found a child node: {0}".format(child))
+            # TODO: Bug here is two found nodes have the same parent, (not in serial), this algorithm fails.
+
+            # Remove child from target nodes, and recurse
+            remaining_children = [x for x in remaining_targets if x != child]
+        else:
+            # We didn't hit a child, so no changes.
+            remaining_children = remaining_targets
+
+        # Add an edge between the current node and the child
+        new_matrix = deepcopy(curr_matrix)
+        new_matrix.add_edge(starting_node, child)
+
+        if len(remaining_children) == 0:
+            # We've found all children, we're done!
+            yield new_matrix
+        else:
+            yield from find_children(graph = graph,
+                                     starting_node = child,
+                                     # Make sure we don't go in circles
+                                     has_visited = has_visited + [child],
+                                     remaining_targets = remaining_children,
+                                     curr_matrix = new_matrix)
 
 def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) \
         -> Iterator[Dict[Node, List[Node]]]:
+    nodes = list(graph.keys())
+    num_nodes = len(nodes)
+    graph_matrix = utils.adj_to_matrix(graph)
 
     # Lookup all nodes with that same colour
-    node_colour_lookup: Dict[Colour, List[Node]] = build_node_lookup(list(graph.keys()))
+    node_colour_lookup: Dict[Colour, List[Node]] = build_node_colour_lookup(list(graph.keys()))
 
-
-
-    # This gets all the paths from one starting node to one or more end nodes
-    def find_children(starting_node: Node,
-                      has_visited: List[Node],
-                      remaining_targets: List[Node],
-                      curr_adj: Dict[Node, List[Node]]) -> Iterator[Dict[Node, List[Node]]]:
-
-        # Get all children of root.
-        children_of_root = graph.get(starting_node, [])
-        for child in children_of_root:
-            child_name = child.id
-            if child_name in has_visited:
-                logging.debug("Skipping visited child: {0}".format(child_name))
-                continue
-
-            if child_name == starting_node.id:
-                logging.debug("Skipping duplicate node: {0}".format(child_name))
-                continue
-
-            if child in remaining_targets:  # We found one of our target nodes!
-                logging.debug("Found a child node: {0}".format(child_name))
-                # TODO: Bug here is two found nodes have the same parent, (not in serial), this algorithm fails.
-
-                # Remove child from target nodes, and recurse
-                remaining_children = [x for x in remaining_targets if x.id != child.id]
-            else:
-                # We didn't hit a child, so no changes.
-                remaining_children = remaining_targets
-
-            # Add the child to the adjacency list for recurse.
-            new_adj = deepcopy(curr_adj)
-            new_adj.update({starting_node: [child] + new_adj.get(starting_node, [])})
-
-            if len(remaining_children) == 0:
-                # We've found all children, we're done!
-                new_adj.update({child: []})
-                yield new_adj
-            else:
-                yield from find_children(starting_node = child,
-                                         # Make sure we don't go in circles
-                                         has_visited = has_visited + [child_name],
-                                         remaining_targets = remaining_children,
-                                         curr_adj = new_adj)
-    # End find_children function
-    ####
-
-    starting_nodes = get_all_starting_nodes(targets = target_colours,
-                                            node_colours = node_colour_lookup)
-    green_nodes = node_colour_lookup.get(Colour.GREEN, [])
-
+    starting_nodes: Iterator[List[int]] = get_all_starting_nodes(
+        nodes = nodes,
+        targets = target_colours,
+        node_colours = node_colour_lookup)
+    green_nodes: List[int] = utils.node_to_index(nodes, node_colour_lookup.get(Colour.GREEN, []))
     # We must start at the green nodes, so if they aren't present, we know there's no solution
     if len(green_nodes) > 0:
-        all_final_adj_output = []
+        all_final_mat_output: List[Matrix] = []
         # Try if from every green node
         for green in green_nodes:
             # Get every set of end-nodes, try and build a graph to each set
             for target_nodes_set in starting_nodes:
-                # store adjacency lists from the particular green node to the particular target node
-                green_to_target = []
+                # store adjacency matrix from the particular green node to the particular target node
+                green_to_target: List[Matrix] = []
                 # Go to each individual target node
                 for target_node in target_nodes_set:
-                    green_to_target.extend(list(find_children(starting_node = green,
-                                             has_visited = [green],  # Make sure we don't go in circles
-                                             remaining_targets = [target_node],
-                                             curr_adj = {})))
+                    green_to_target.extend(list(find_children(
+                        graph = graph_matrix,
+                        starting_node = green,
+                        has_visited = [green],  # Make sure we don't go in circles
+                        remaining_targets = [target_node],
+                        curr_matrix = Matrix(size = num_nodes))))
                 if len(target_nodes_set) == 1:
-                    yield from green_to_target
+                    # There's only one node we're looking for
+                    for completed_matrix in green_to_target:
+                        completed_adj = utils.matrix_to_adj(nodes, completed_matrix)
+                        yield completed_adj
                 else:
                     # Once we've gotten paths between that green node and every target node in the set, it's time to combine them and check!
                     for combination in itertools.combinations(range(len(green_to_target)), r = len(target_nodes_set)):
                         # Create the merged graph
-                        merged = {}
+                        merged = Matrix(size = num_nodes)
                         for c in combination:
-                            merged = combine_adj_list(green, green_to_target[c], merged)
+                            merged = combine_adj_matrix(green, green_to_target[c], merged)
 
                         # G1 and G2 are the two adjacency lists to combine from green_to_target
                         # They will have the same starting node, but different ending node
                         # Determine if we've already output it
-                        if not has_output_adj(all_final_adj_output, merged):
+                        if not utils.has_prev_output_graph(all_final_mat_output, merged):
                             # Determine if it meets all criteria
                             # (does it contain all of the target nodes)
-                            target_node_ideal = []
-                            for k in merged.keys():
-                                # We only care about the target nodes
-                                if k.id in [n.id for n in target_nodes_set]:
-                                    target_node_ideal.append(k.id)
+                            did_get_all_targets = True
+                            for target in target_nodes_set:
+                                did_get_all_targets = did_get_all_targets and len(merged.inward_edges_lst(target)) > 0
+
                             # Determine if we got them all
-                            if set(target_node_ideal) == set(list(map(lambda n: n.id, target_nodes_set))):
-                                all_final_adj_output.append(merged)
-                                yield merged
+                            if did_get_all_targets:
+                                all_final_mat_output.append(merged)
+                                merged_adj = utils.matrix_to_adj(nodes, merged)
+                                yield merged_adj
 
-
-def build_node_lookup(nodes: List[Node]) -> Dict[Colour, List[Node]]:
+def build_node_colour_lookup(nodes: List[Node]) -> Dict[Colour, List[Node]]:
     # Given a graph, return a dictionary containing a key as a colour, and a list of nodes that are that colour.
-
     output: Dict[Colour, List[Node]] = {}
 
     for node in nodes:
         node_colour: Colour = node.get_colour()
-
         # Append it to the other nodes we have with that colour, get the empty list if this is the first one.
         output.update({node_colour: [node] + output.get(node_colour, [])})
 
     return output
 
-
-def get_all_starting_nodes(targets: List[Colour],
-                           node_colours: Dict[Colour, List[Node]]) -> Iterator[List[Node]]:
-
+def get_all_starting_nodes(nodes: List[Node], targets: List[Colour], node_colours: Dict[Colour, List[Node]]) -> Iterator[List[int]]:
     # Get all possible combination of Nodes that are Colour
     # given -> [[A], [B], [C, D]]
     # output1 -> [A, B, C]
@@ -216,8 +151,6 @@ def get_all_starting_nodes(targets: List[Colour],
     def join(sub_plan_data: List[Colour]) -> Iterator[List[Node]]:
         if len(sub_plan_data) == 0:
             yield []
-        elif len(sub_plan_data) == 1 and len(targets) > 1:
-            yield list(node_colours.get(sub_plan_data[0]))
         else:
             current_colour = sub_plan_data.pop()
             # Join this one with the yielded result from the previous
@@ -225,4 +158,7 @@ def get_all_starting_nodes(targets: List[Colour],
                 for current_data_node in node_colours.get(current_colour, []):
                     yield sub_plans + [current_data_node]
 
-    yield from join(sub_plan_data = targets)
+    for result in join(sub_plan_data = targets):
+        # Return just the indices of the nodes in the plan
+        node_indices = utils.node_to_index(nodes, result)
+        yield node_indices

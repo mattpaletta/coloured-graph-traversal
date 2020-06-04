@@ -1,5 +1,5 @@
 from unittest import TestCase
-from colouring.traversal import traverse_graph, Node, Colour, get_all_starting_nodes, build_node_lookup
+from colouring.traversal import traverse_graph, Node, Colour
 from typing import List, Dict
 
 # Helper function, takes a list of nodes, and a graph of their indices, returns the nodes at those indices
@@ -144,9 +144,9 @@ class TestTraversal(TestCase):
         }
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.BLUE, Colour.RED]))
-        for graph in result:
-            print("Printing solution")
-            print(nodes_to_index(nodes, graph))
+        # for graph in result:
+        #    print("Printing solution")
+        #    print(nodes_to_index(nodes, graph))
         assert len(result) == 4, "there are no graphs that satisfy this graph"
 
     def test_splitting_end_points(self):
@@ -161,7 +161,7 @@ class TestTraversal(TestCase):
             0 : [1, 4, 5],
             1 : [2],
             2 : [3],
-            3 : [3, 0],
+            3 : [3, 0, 4],
             4 : [],
             5 : [],
             6 : [4],
@@ -169,10 +169,7 @@ class TestTraversal(TestCase):
 
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.BLUE, Colour.RED]))
-        for graph in result:
-            print("Printing result")
-            print(nodes_to_index(nodes, graph))
-        assert len(result) == 3, "Should have found all three target graphs"
+        assert len(result) == 2, "Should have found all three target graphs"
 
 
     def small_node_list(self):
