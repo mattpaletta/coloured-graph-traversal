@@ -42,5 +42,14 @@ class Matrix(object):
                     return False
         return True
 
+    def subset(self, other) -> bool:
+        if self._size != other._size:
+            return False
+        for i in range(self._size):
+            for j in range(self._size):
+                if other.get_edge(i, j) and not self.get_edge(i, j):
+                    return False
+        return True
+
     def size(self) -> int:
         return self._size

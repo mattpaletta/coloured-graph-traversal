@@ -9,6 +9,13 @@ from colouring.node import Node
 from colouring import utils
 
 def combine_adj_matrix(starting_node: int, graph1: Matrix, graph2: Matrix) -> Matrix:
+    if graph1.equals(graph2):
+        return graph1
+    elif graph1.subset(graph2):
+        return graph1
+    elif graph2.subset(graph1):
+        return graph2
+
     out = Matrix(graph1.size())
 
     def traverse(curr_node, visited: Set[int]):
