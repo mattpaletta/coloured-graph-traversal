@@ -15,6 +15,7 @@ from typing import List, Dict
 #    Node(2) : [Node(3)],
 #    Node(3) : []
 # }
+
 def index_to_nodes(nodes: List[Node], graph: Dict[int, List[int]]) -> Dict[Node, List[Node]]:
     out: Dict[Node, List[Node]] = {}
     for k, v in graph.items():

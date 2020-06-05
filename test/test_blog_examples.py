@@ -101,8 +101,8 @@ class TestBlogExamples(TestCase):
         }
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.RED, Colour.BLUE]))
-        for graph in result:
-            print("Printing solutoin")
-            print(nodes_to_index(nodes, graph))
-        assert len(result) == 1
+        #for graph in result:
+        #    print("Printing solution")
+        #    print(nodes_to_index(nodes, graph))
+        assert len(result) == 4
 
