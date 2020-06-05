@@ -1,7 +1,7 @@
 from unittest import TestCase
 from colouring.matrix import Matrix
 from colouring import utils
-from colouring.traversal import Node, Colour, get_all_starting_nodes, build_node_colour_lookup
+from colouring.traversal import Node, Colour, get_all_target_nodes, build_node_colour_lookup
 
 
 class TestUtils(TestCase):
@@ -11,7 +11,7 @@ class TestUtils(TestCase):
 
     def test_starting_nodes_single_target_single(self):
         graph_nodes = self.small_node_list()
-        result = get_all_starting_nodes(
+        result = get_all_target_nodes(
                 nodes = graph_nodes,
                 targets = [Colour.RED],
                 node_colours = build_node_colour_lookup(nodes = graph_nodes))
@@ -22,7 +22,7 @@ class TestUtils(TestCase):
 
     def test_starting_nodes_single_target_multiple(self):
         graph_nodes = self.small_node_list()
-        result = get_all_starting_nodes(
+        result = get_all_target_nodes(
                 nodes = graph_nodes,
                 targets = [Colour.BLUE],
                 node_colours = build_node_colour_lookup(nodes = graph_nodes))
@@ -33,7 +33,7 @@ class TestUtils(TestCase):
 
     def test_starting_nodes_multiple_target_single(self):
         graph_nodes = self.small_node_list()
-        result = get_all_starting_nodes(
+        result = get_all_target_nodes(
                 nodes = graph_nodes,
                 targets = [Colour.YELLOW, Colour.RED],
                 node_colours = build_node_colour_lookup(nodes = graph_nodes))
