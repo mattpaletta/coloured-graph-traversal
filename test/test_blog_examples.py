@@ -47,7 +47,7 @@ class TestBlogExamples(TestCase):
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.RED]))
         assert len(result) == 1
-    
+
     def test_example2(self):
         nodes = [Node(colour = Colour.GREEN, id = 1),
                  Node(colour = Colour.BLACK, id = 2),
@@ -60,13 +60,13 @@ class TestBlogExamples(TestCase):
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.RED]))
         assert len(result) == 0
-    
+
     def test_example3(self):
         nodes = [Node(colour = Colour.GREEN, id = 1),
                  Node(colour = Colour.BLACK, id = 2),
                  Node(colour = Colour.BLACK, id = 3),
-                 Node(colour = Colour.BLACK, id = 4),
-                 Node(colour = Colour.BLUE, id = 5),
+                 Node(colour = Colour.BLUE, id = 4),
+                 Node(colour = Colour.BLACK, id = 5),
                  Node(colour = Colour.BLACK, id = 6),
                  Node(colour = Colour.RED, id = 7)]
         simple_graph = {
@@ -80,8 +80,11 @@ class TestBlogExamples(TestCase):
         }
         node_graph = index_to_nodes(nodes, simple_graph)
         result = list(traverse_graph(graph = node_graph, target_colours = [Colour.RED, Colour.BLUE]))
-        assert len(result) == 1
-    
+        #for graph in result:
+        #    print("Printing solution")
+        #    print(nodes_to_index(nodes, graph))
+        assert len(result) == 3
+
     def test_example4(self):
         nodes = [Node(colour = Colour.GREEN, id = 1),
                  Node(colour = Colour.BLACK, id = 2),
@@ -105,4 +108,3 @@ class TestBlogExamples(TestCase):
         #    print("Printing solution")
         #    print(nodes_to_index(nodes, graph))
         assert len(result) == 4
-

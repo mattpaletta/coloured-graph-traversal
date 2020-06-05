@@ -82,51 +82,50 @@ def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) 
         targets = target_colours,
         node_colours = node_colour_lookup)
     green_nodes: List[int] = utils.node_to_index(nodes, node_colour_lookup.get(Colour.GREEN, []))
+    all_final_mat_output: List[Matrix] = []
     # We must start at the green nodes, so if they aren't present, we know there's no solution
-    if len(green_nodes) > 0:
-        all_final_mat_output: List[Matrix] = []
-        # Try if from every green node
-        for green in green_nodes:
-            # Get every set of end-nodes, try and build a graph to each set
-            for target_nodes_set in starting_nodes:
-                # store adjacency matrix from the particular green node to the particular target node
-                green_to_target: List[Matrix] = []
-                # Go to each individual target node
-                for target_node in target_nodes_set:
-                    green_to_target.extend(list(find_children(
-                        graph = graph_matrix,
-                        starting_node = green,
-                        has_visited = [green],  # Make sure we don't go in circles
-                        remaining_targets = [target_node],
-                        curr_matrix = Matrix(size = num_nodes))))
-                if len(target_nodes_set) == 1:
-                    # There's only one node we're looking for
-                    for completed_matrix in green_to_target:
-                        completed_adj = utils.matrix_to_adj(nodes, completed_matrix)
-                        yield completed_adj
-                else:
-                    # Once we've gotten paths between that green node and every target node in the set, it's time to combine them and check!
-                    for combination in itertools.combinations(range(len(green_to_target)), r = len(target_nodes_set)):
-                        # Create the merged graph
-                        merged = Matrix(size = num_nodes)
-                        for c in combination:
-                            merged = combine_adj_matrix(green, green_to_target[c], merged)
+    # Try it from every green node
+    for green in green_nodes:
+        # Get every set of end-nodes, try and build a graph to each set
+        for target_nodes_set in starting_nodes:
+            # store adjacency matrix from the particular green node to the particular target node
+            green_to_target: List[Matrix] = []
+            # Go to each individual target node
+            for target_node in target_nodes_set:
+                green_to_target.extend(list(find_children(
+                    graph = graph_matrix,
+                    starting_node = green,
+                    has_visited = [green],  # Make sure we don't go in circles
+                    remaining_targets = [target_node],
+                    curr_matrix = Matrix(size = num_nodes))))
+            if len(target_nodes_set) == 1:
+                # There's only one node we're looking for, so output all paths to that node
+                for completed_matrix in green_to_target:
+                    completed_adj = utils.matrix_to_adj(nodes, completed_matrix)
+                    yield completed_adj
+            else:
+                # Once we've gotten paths between that green node and every target node in the set, it's time to combine them and check!
+                for combination in itertools.combinations(range(len(green_to_target)), r = len(target_nodes_set)):
+                    # Create the merged graph
+                    merged = Matrix(size = num_nodes)
+                    for c in combination:
+                        merged = combine_adj_matrix(green, green_to_target[c], merged)
 
-                        # G1 and G2 are the two adjacency lists to combine from green_to_target
-                        # They will have the same starting node, but different ending node
-                        # Determine if we've already output it
-                        if not utils.has_prev_output_graph(all_final_mat_output, merged):
-                            # Determine if it meets all criteria
-                            # (does it contain all of the target nodes)
-                            did_get_all_targets = True
-                            for target in target_nodes_set:
-                                did_get_all_targets = did_get_all_targets and len(merged.inward_edges_lst(target)) > 0
+                    # G1 and G2 are the two adjacency lists to combine from green_to_target
+                    # They will have the same starting node, but different ending node
+                    # Determine if we've already output it
+                    if not utils.has_prev_output_graph(all_final_mat_output, merged):
+                        # Determine if it meets all criteria
+                        # (does it contain all of the target nodes)
+                        did_get_all_targets = True
+                        for target in target_nodes_set:
+                            did_get_all_targets = did_get_all_targets and len(merged.inward_edges_lst(target)) > 0
 
-                            # Determine if we got them all
-                            if did_get_all_targets:
-                                all_final_mat_output.append(merged)
-                                merged_adj = utils.matrix_to_adj(nodes, merged)
-                                yield merged_adj
+                        # Determine if we got them all
+                        if did_get_all_targets:
+                            all_final_mat_output.append(merged)
+                            merged_adj = utils.matrix_to_adj(nodes, merged)
+                            yield merged_adj
 
 def build_node_colour_lookup(nodes: List[Node]) -> Dict[Colour, List[Node]]:
     # Given a graph, return a dictionary containing a key as a colour, and a list of nodes that are that colour.
