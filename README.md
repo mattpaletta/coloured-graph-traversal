@@ -1,4 +1,4 @@
 # Coloured Graph Traversal
 [![Build Status](https://travis-ci.com/mattpaletta/coloured-graph-traversal.svg?token=ysncAybhRTtbpjrpSW8S&branch=master)](https://travis-ci.com/mattpaletta/coloured-graph-traversal)
 
-* Blog post coming soon: [Medium Blog](https://medium.com/@mattpaletta)
+* Blog post avilable here: [@mattpaletta - Medium](https://medium.com/@mattpaletta/graph-multi-colour-ed-problem-7aff54539f8f)
