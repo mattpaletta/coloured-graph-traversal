@@ -83,7 +83,7 @@ class TestBlogExamples(TestCase):
         #for graph in result:
         #    print("Printing solution")
         #    print(nodes_to_index(nodes, graph))
-        assert len(result) == 3
+        assert len(result) == 2
 
     def test_example4(self):
         nodes = [Node(colour = Colour.GREEN, id = 1),

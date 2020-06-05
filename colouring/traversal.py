@@ -8,7 +8,7 @@ from colouring.matrix import Matrix
 from colouring.node import Node
 from colouring import utils
 
-def combine_adj_matrix(starting_node: int, graph1: Matrix, graph2: Matrix) -> Matrix:
+def combine_adj_matrix(starting_node: int, graph1: Matrix, graph2: Matrix, target_nodes: List[int]) -> Matrix:
     if graph1.equals(graph2):
         return graph1
     elif graph1.subset(graph2):
@@ -18,6 +18,20 @@ def combine_adj_matrix(starting_node: int, graph1: Matrix, graph2: Matrix) -> Ma
 
     out = Matrix(graph1.size())
 
+    def does_lead_to_target(curr_node, visited: Set[int]):
+        if curr_node not in target_nodes:
+            if curr_node not in visited:
+                all_outgoing = set(graph1.get_connected_lst(curr_node) + graph2.get_connected_lst(curr_node))
+                visited.add(curr_node)
+                for outgoing in all_outgoing:
+                    if outgoing not in visited:
+                        # out.add_edge(curr_node, outgoing)
+                        if does_lead_to_target(outgoing, visited):
+                            return True
+            return False
+        else:
+            return True
+
     def traverse(curr_node, visited: Set[int]):
         # Do nothing if we already visited the node
         if curr_node not in visited:
@@ -25,7 +39,8 @@ def combine_adj_matrix(starting_node: int, graph1: Matrix, graph2: Matrix) -> Ma
             all_outgoing = set(graph1.get_connected_lst(curr_node) + graph2.get_connected_lst(curr_node))
             visited.add(curr_node)
             for outgoing in all_outgoing:
-                if outgoing not in visited:
+                # Make sure we don't go in circles, make sure to prune any extraneous edges
+                if outgoing not in visited and does_lead_to_target(outgoing, deepcopy(visited)):
                     out.add_edge(curr_node, outgoing)
                     traverse(outgoing, visited)
     traverse(starting_node, set())
@@ -116,7 +131,7 @@ def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) 
                     # Create the merged graph
                     merged = Matrix(size = num_nodes)
                     for c in combination:
-                        merged = combine_adj_matrix(green, green_to_target[c], merged)
+                        merged = combine_adj_matrix(green, green_to_target[c], merged, target_nodes_set)
 
                     # G1 and G2 are the two adjacency lists to combine from green_to_target
                     # They will have the same starting node, but different ending node
