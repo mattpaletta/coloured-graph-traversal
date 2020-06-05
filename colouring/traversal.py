@@ -99,7 +99,7 @@ def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) 
     # Lookup all nodes with that same colour
     node_colour_lookup: Dict[Colour, List[Node]] = build_node_colour_lookup(list(graph.keys()))
 
-    starting_nodes: Iterator[List[int]] = get_all_starting_nodes(
+    target_node_sets: Iterator[List[int]] = get_all_target_nodes(
         nodes = nodes,
         targets = target_colours,
         node_colours = node_colour_lookup)
@@ -109,7 +109,7 @@ def traverse_graph(graph: Dict[Node, List[Node]], target_colours: List[Colour]) 
     # Try it from every green node
     for green in green_nodes:
         # Get every set of end-nodes, try and build a graph to each set
-        for target_nodes_set in starting_nodes:
+        for target_nodes_set in target_node_sets:
             # store adjacency matrix from the particular green node to the particular target node
             green_to_target: List[Matrix] = []
             # Go to each individual target node
@@ -160,7 +160,7 @@ def build_node_colour_lookup(nodes: List[Node]) -> Dict[Colour, List[Node]]:
 
     return output
 
-def get_all_starting_nodes(nodes: List[Node], targets: List[Colour], node_colours: Dict[Colour, List[Node]]) -> Iterator[List[int]]:
+def get_all_target_nodes(nodes: List[Node], targets: List[Colour], node_colours: Dict[Colour, List[Node]]) -> Iterator[List[int]]:
     # Get all possible combination of Nodes that are Colour
     # given -> [[A], [B], [C, D]]
     # output1 -> [A, B, C]
